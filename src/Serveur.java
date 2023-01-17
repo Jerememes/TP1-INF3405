@@ -9,7 +9,7 @@ public class Serveur {
 			// Compteur incrémenté à chaque connexion d'un client au serveur
 			int clientNumber = 0;
 			// Adresse et port du serveur
-			// String serverAddress = "127.0.0.1";
+			String serverAddress = "127.0.0.1";
 			int serverPort = 5000;
 		// Création de la connexien pour communiquer ave les, clients
 		Listener = new ServerSocket();
