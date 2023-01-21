@@ -30,8 +30,13 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         while (true) {
             try {
                 String[] commandFromClient = in.readUTF().split(" ");
-                if (commandFromClient.length <= 2) {
+                if (commandFromClient.length == 2) {
                     reducer(commandFromClient[0], commandFromClient[1]);
+                } else if (commandFromClient.length == 1) {
+                    reducer(commandFromClient[0], "");
+                } else {
+                    System.out.println("Can't handle the request");
+                    out.writeUTF("Either you made a mistake writing the command or an error occurred");
                 }
             } catch (IOException e) {
                 System.out.println("Error handling client#" + clientNumber + ": " + e);

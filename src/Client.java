@@ -32,6 +32,7 @@ public class Client {
             try {
                 String command = console.nextLine();
                 out.writeUTF(command);
+                System.out.println(in.readUTF());
             } catch (IOException e) {
                 System.out.println("Error while sending request to server");
                 break;
