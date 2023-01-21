@@ -1,28 +1,77 @@
-
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-public class ClientHandler extends Thread { // pour traiter la demande de chaque client sur un socket particulier
-private Socket socket;
-private int clientNumber;
-public ClientHandler(Socket socket, int clientNumber) {
-this.socket = socket;
-this.clientNumber = clientNumber;
-System.out.println("New connection with client#" + clientNumber + " at" + socket);
-}
-public void run() { // Création de thread qui envoi un message à un client
-try {
-DataOutputStream out = new DataOutputStream(socket.getOutputStream()); // création de canal d’envoi
-out.writeUTF("Hello from server - you are client#" + clientNumber); // envoi de message
-} catch (IOException e) {
-System.out.println("Error handling client# " + clientNumber + ": " + e);
-} finally {
-try {
-socket.close();
-} catch (IOException e) {
-System.out.println("Couldn't close a socket, what's going on?");
-}
-System.out.println("Connection with client# " + clientNumber + " closed");
-}
-}
+
+public class ClientHandler extends Thread { // Pour traiter la demande de chaque client sur un socket particulier
+    private Socket socket;
+    private DataOutputStream out;
+    private DataInputStream in;
+    private int clientNumber;
+    public ClientHandler(Socket socket, int clientNumber) {
+        this.socket = socket;
+        this.clientNumber = clientNumber;
+        System.out.println("New connection with client#" + clientNumber + " at" + socket);
+    }
+    public void run() { // Création de thread qui envoie un message à un client
+        try {
+            out = new DataOutputStream(socket.getOutputStream()); // Création de canal d’envoi
+            in = new DataInputStream(socket.getInputStream()); // Création de canal de réception
+            out.writeUTF("Hello from server - you are client#" + clientNumber);
+        } catch (IOException e) {
+            System.out.println("Error handling client# " + clientNumber + ": " + e);
+        } finally {
+            communication();
+        }
+    }
+
+    private void communication() {
+        while (true) {
+            try {
+                String[] commandFromClient = in.readUTF().split(" ");
+                if (commandFromClient.length <= 2) {
+                    reducer(commandFromClient[0], commandFromClient[1]);
+                }
+            } catch (IOException e) {
+                System.out.println("Error handling client#" + clientNumber + ": " + e);
+            }
+
+            try {
+                socket.close();
+            } catch (IOException e) {
+                System.out.println("Couldn't close a socket, what's going on?");
+            }
+            System.out.println("Connection with client# " + clientNumber + " closed");
+        }
+    }
+
+    private void reducer(String commandName, String parameter) {
+        try {
+            switch (commandName) {
+                case "cd":
+                    System.out.println("Handling command cd");
+                    break;
+                case "ls":
+                    System.out.println("Handling command ls");
+                    break;
+                case "mkdir":
+                    System.out.println("Handling command mkdir");
+                    break;
+                case "upload":
+                    System.out.println("Handling command upload");
+                    break;
+                case "download":
+                    System.out.println("Handling command download");
+                    break;
+                case "exit":
+                    System.out.println("Handling command exit");
+                    break;
+                default:
+                    System.out.println("Can't handle the request");
+                    out.writeUTF("Either you made a mistake writing the command or an error occurred");
+            }
+        } catch (IOException e) {
+            System.out.println("Error handling client#" + clientNumber + ": " + e);
+        }
+    }
 }
