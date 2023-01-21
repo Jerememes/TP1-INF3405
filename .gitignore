@@ -1,1 +1,4 @@
-/bin/
+bin/
+out/
+.idea/
+TP1-INF3405.iml
