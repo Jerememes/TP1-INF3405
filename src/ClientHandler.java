@@ -8,18 +8,19 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
     private DataOutputStream out;
     private DataInputStream in;
     private int clientNumber;
+
     public ClientHandler(Socket socket, int clientNumber) {
         this.socket = socket;
         this.clientNumber = clientNumber;
-        System.out.println("New connection with client#" + clientNumber + " at" + socket);
+        System.out.println("New connection with client#" + clientNumber + " at " + socket);
     }
-    public void run() { // Création de thread qui envoie un message à un client
+    public void run() { // Création de thread qui communique avec un client
         try {
-            out = new DataOutputStream(socket.getOutputStream()); // Création de canal d’envoi
             in = new DataInputStream(socket.getInputStream()); // Création de canal de réception
+            out = new DataOutputStream(socket.getOutputStream()); // Création de canal d’envoi
             out.writeUTF("Hello from server - you are client#" + clientNumber);
         } catch (IOException e) {
-            System.out.println("Error handling client# " + clientNumber + ": " + e);
+            System.out.println("Error handling client#" + clientNumber + ": " + e);
         } finally {
             communication();
         }
@@ -34,14 +35,8 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                 }
             } catch (IOException e) {
                 System.out.println("Error handling client#" + clientNumber + ": " + e);
+                break;
             }
-
-            try {
-                socket.close();
-            } catch (IOException e) {
-                System.out.println("Couldn't close a socket, what's going on?");
-            }
-            System.out.println("Connection with client# " + clientNumber + " closed");
         }
     }
 
@@ -65,6 +60,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     break;
                 case "exit":
                     System.out.println("Handling command exit");
+                    System.out.println("Connection with client# " + clientNumber + " closed");
                     break;
                 default:
                     System.out.println("Can't handle the request");
