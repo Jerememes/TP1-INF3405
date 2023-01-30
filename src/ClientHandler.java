@@ -2,6 +2,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.io.File;
 
 public class ClientHandler extends Thread { // Pour traiter la demande de chaque client sur un socket particulier
     private Socket socket;
@@ -33,7 +34,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                 if (commandFromClient.length == 2) {
                     reducer(commandFromClient[0], commandFromClient[1]);
                 } else if (commandFromClient.length == 1) {
-                    reducer(commandFromClient[0], "");
+                    reducer(commandFromClient[0], null);
                 } else {
                     System.out.println("Can't handle the request");
                     out.writeUTF("Either you made a mistake writing the command or an error occurred");
@@ -46,6 +47,8 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
     }
 
     private void reducer(String commandName, String parameter) {
+        String result = "";
+        File repertoireCourant;
         try {
             switch (commandName) {
                 case "cd":
@@ -53,9 +56,28 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     break;
                 case "ls":
                     System.out.println("Handling command ls");
+                    repertoireCourant = new File(System.getProperty("user.dir"));
+                    File[] listFile = repertoireCourant.listFiles();
+                    
+                    for(File file : listFile) {
+                        if (file.isDirectory()) {
+                            result += "[Folder] " + file.getName() + "\n";
+                        } else if (file.isFile()){
+                            result += "[File] " + file.getName() + "\n";
+                        }
+                    }
                     break;
                 case "mkdir":
                     System.out.println("Handling command mkdir");
+                    repertoireCourant = new File(System.getProperty("user.dir"));
+				    File Dossier = new File(repertoireCourant, parameter);
+				    boolean res = Dossier.mkdir();
+				
+				if (res) {
+					result = "Le dossier " + parameter + " a été créé.";
+				} else {
+					result = "Le dossier " + parameter + " n'a pas été créé.";
+				}
                     break;
                 case "upload":
                     System.out.println("Handling command upload");
@@ -64,13 +86,18 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     System.out.println("Handling command download");
                     break;
                 case "exit":
-                    System.out.println("Handling command exit");
+                    try {
+                        socket.close();
+                    } catch (IOException e) {
+                        System.out.println("Couldn't close a socket, what's going on?");
+                    }
                     System.out.println("Connection with client# " + clientNumber + " closed");
                     break;
                 default:
                     System.out.println("Can't handle the request");
-                    out.writeUTF("Either you made a mistake writing the command or an error occurred");
+                    result = "Either you made a mistake writing the command or an error occurred";
             }
+            out.writeUTF(result);
         } catch (IOException e) {
             System.out.println("Error handling client#" + clientNumber + ": " + e);
         }
