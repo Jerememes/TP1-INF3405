@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.util.Arrays;
 import java.util.Scanner;
 public class Serveur {
 	private static ServerSocket Listener;
@@ -59,12 +60,35 @@ public class Serveur {
 	}
 
 	private static boolean isValidPort(String port) {
-		// TODO Auto-generated method stub
+		try {
+			int nombre = Integer.parseInt(port);
+			if (nombre < 5000 || nombre > 5050) {
+				return false;
+			}
+		} catch(NumberFormatException e) {
+			return false;
+			
+		}
+		
 		return true;
 	}
 
-	private static boolean isValidIp(String iP) {
-		// TODO Auto-generated method stub
+	private static boolean isValidIp(String ip) {
+		String[] Ip = ip.split("\\.");
+		if (Ip.length != 4) {
+			return false;
+		}
+		for(String nb : Ip) {
+			try {
+				int nombre = Integer.parseInt(nb);
+				if (nombre > 255 || nombre < 0) {
+					return false;
+				}
+			} catch(NumberFormatException e) {
+				return false;
+				
+			}
+		}
 		return true;
 	}
 }
