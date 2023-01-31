@@ -58,7 +58,9 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     System.out.println("Handling command ls");
                     repertoireCourant = new File(System.getProperty("user.dir"));
                     File[] listFile = repertoireCourant.listFiles();
-                    
+                    if(listFile == null) {
+                    	result = "Ce dossier est vide";
+                    }
                     for(File file : listFile) {
                         if (file.isDirectory()) {
                             result += "[Folder] " + file.getName() + "\n";

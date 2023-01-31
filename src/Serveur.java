@@ -1,14 +1,14 @@
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.util.Scanner;
 public class Serveur {
 	private static ServerSocket Listener;
 	private static int clientNumber = 0;
-
-	public static void main(String[] args) throws Exception {
-		int serverPort = 5000;
-		String serverAddress = "127.0.0.1";
-
+	static int serverPort = 5000;
+	static String serverAddress = "127.0.0.1";
+	public static void main(String[] args) throws Exception {		
+		initServeur();
 		Listener = new ServerSocket();
 		Listener.setReuseAddress(true);
 		InetAddress serverIP = InetAddress.getByName(serverAddress);
@@ -25,5 +25,46 @@ public class Serveur {
 			// Fermeture de la connexion
 			Listener.close();
 		}
+	}
+
+	private static void initServeur() {
+		Scanner console = new Scanner(System.in);
+		System.out.println("Bonjour !");
+
+		while(true) {
+			System.out.println("Veuillez rentrer l'adresse IP : ");
+			String ip = console.nextLine();
+			if (isValidIp(ip)) {
+				serverAddress = ip;
+				break;
+			} else {
+				System.out.println("L'adresse n'est pas valides");
+
+			}
+		}
+
+		while(true) {
+			System.out.println("Veuillez rentrer le port de connexion : ");
+			String port = console.nextLine();
+			if (isValidPort(port)) {
+				int p = Integer.parseInt(port);
+				serverPort = p;
+				break;
+			} else {
+				System.out.println("Le port n'est pas valide");
+			}
+		}
+		
+		
+	}
+
+	private static boolean isValidPort(String port) {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
+	private static boolean isValidIp(String iP) {
+		// TODO Auto-generated method stub
+		return true;
 	}
 }
