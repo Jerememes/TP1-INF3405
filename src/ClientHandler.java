@@ -116,10 +116,12 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
     private String handleCommandMkdir(String commandName, String parameter) {
         String result = "";
         File directory = new File(System.getProperty("user.dir"));
-        File folder = new File(directory, parameter);
 
-        if (folder.mkdir()) {
-            result = "Le dossier " + parameter + " a été créé.";
+        if (parameter != null) {
+            File folder = new File(directory, parameter);
+            if (folder.mkdir()) {
+                result = "Le dossier " + parameter + " a été créé.";
+            }
         } else {
             result = "Le dossier " + parameter + " n'a pas été créé.";
         }
