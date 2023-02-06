@@ -41,7 +41,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                         return;
                 } else {
                     System.out.println("Can't handle the request");
-                    out.writeUTF("Either you made a mistake writing the command or an error occurred");
+                    out.writeUTF("Either you made a mistake writing the command or an error occurred.");
                 }
 
             } catch (IOException e) {
@@ -81,7 +81,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     return;
                 default:
                     System.out.println("Can't handle the request");
-                    result = "Either you made a mistake writing the command or an error occurred";
+                    result = "Either you made a mistake writing the command or an error occurred.";
             }
             out.writeUTF(result);
         } catch (IOException e) {

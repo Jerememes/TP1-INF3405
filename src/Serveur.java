@@ -39,8 +39,7 @@ public class Serveur {
 				serverAddress = ip;
 				break;
 			} else {
-				System.out.println("L'adresse n'est pas valides");
-
+				System.out.println("L'adresse n'est pas valide.");
 			}
 		}
 
@@ -52,7 +51,7 @@ public class Serveur {
 				serverPort = p;
 				break;
 			} else {
-				System.out.println("Le port n'est pas valide");
+				System.out.println("Le port n'est pas valide.");
 			}
 		}
 
@@ -62,7 +61,7 @@ public class Serveur {
 	private static boolean isValidPort(String port) {
 		try {
 			int number = Integer.parseInt(port);
-			if (number >= 5000 || number <= 5050) {
+			if (number >= 5000 && number <= 5050) {
 				return true;
 			}
 		} catch(NumberFormatException e) {
@@ -72,19 +71,21 @@ public class Serveur {
 	}
 
 	private static boolean isValidIp(String ip) {
+		boolean result = false;
 		String[] ipNumbers = ip.split("\\.");
 		if (ipNumbers.length == 4) {
 			for(String nb : ipNumbers) {
 				try {
 					int number = Integer.parseInt(nb);
-					if (number <= 255 || number >= 0) {
-						return true;
-					}
+					if (number > 255 || number < 0) {
+						return false;
+					} 
+					result = true;
 				} catch(NumberFormatException e) {
 					return false;
 				}
 			}
 		}
-		return false;
+		return result;
 	}
 }
