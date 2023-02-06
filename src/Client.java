@@ -31,12 +31,14 @@ public class Client {
         while (true) {
             try {
                 String command = console.nextLine();
+                out.writeUTF(command);
+                
                 if(command.equals("exit")) {
                     console.close();
                     break;
                 }
-                out.writeUTF(command);
                 System.out.println(in.readUTF());
+
             } catch (IOException e) {
                 System.out.println("Error while sending request to server");
                 break;
