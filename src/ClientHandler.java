@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.Socket;
 import java.io.FileInputStream;
+import java.util.Arrays;
 
 public class ClientHandler extends Thread { // Pour traiter la demande de chaque client sur un socket particulier
     final private Socket socket;
@@ -99,7 +100,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         String result = "";
         File directory = new File(System.getProperty("user.dir"));
         File[] fileList = directory.listFiles();
-
+        //result = String.join(", ", Arrays.stream(fileList).map(File::toString).toArray(String[]::new));
         for(File file : fileList) {
             if (file.isDirectory()) {
                 result += "[Folder] " + file.getName() + "\n";
@@ -137,7 +138,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     Socket socket = new Socket("localhost", 5000);
                     DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
                     DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-
+                    return s;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -148,6 +149,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         } else {
             return s;
         }
+		return s;
     }
 
     private String handleCommandDownload(String commandName, String parameter) throws IOException {
