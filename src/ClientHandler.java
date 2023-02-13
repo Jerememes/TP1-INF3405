@@ -1,14 +1,12 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
-import java.io.File;
+import java.io.FileInputStream;
 
 public class ClientHandler extends Thread { // Pour traiter la demande de chaque client sur un socket particulier
-    private Socket socket;
+    final private Socket socket;
     private DataOutputStream out;
     private DataInputStream in;
-    private int clientNumber;
+    private final int clientNumber;
 
     public ClientHandler(Socket socket, int clientNumber) {
         this.socket = socket;
@@ -32,13 +30,11 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         while (true) {
             try {
                 String[] commandFromClient = in.readUTF().split(" ");
-
                 if (commandFromClient.length == 2) {
                     reducer(commandFromClient[0], commandFromClient[1]);
                 } else if (commandFromClient.length == 1) {
                     reducer(commandFromClient[0], null);
-                    if (commandFromClient[0].startsWith("exit"))
-                        return;
+                    if (commandFromClient[0].startsWith("exit")) return;
                 } else {
                     System.out.println("Can't handle the request");
                     out.writeUTF("Either you made a mistake writing the command or an error occurred.");
@@ -55,33 +51,35 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         String result;
         try {
             switch (commandName) {
-                case "cd":
+                case "cd" -> {
                     System.out.println("Handling command cd");
                     result = handleCommandCd(commandName, parameter);
-                    break;
-                case "ls":
+                }
+                case "ls" -> {
                     System.out.println("Handling command ls");
                     result = handleCommandLs(commandName, parameter);
-                    break;
-                case "mkdir":
+                }
+                case "mkdir" -> {
                     System.out.println("Handling command mkdir");
                     result = handleCommandMkdir(commandName, parameter);
-                    break;
-                case "upload":
+                }
+                case "upload" -> {
                     System.out.println("Handling command upload");
                     result = handleCommandUpload(commandName, parameter);
-                    break;
-                case "download":
+                }
+                case "download" -> {
                     System.out.println("Handling command download");
                     result = handleCommandDownload(commandName, parameter);
-                    break;
-                case "exit":
+                }
+                case "exit" -> {
                     System.out.println("Handling command exit");
                     handleCommandExit(commandName, parameter);
                     return;
-                default:
+                }
+                default -> {
                     System.out.println("Can't handle the request");
                     result = "Either you made a mistake writing the command or an error occurred.";
+                }
             }
             out.writeUTF(result);
         } catch (IOException e) {
@@ -123,68 +121,75 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                 result = "Le dossier " + parameter + " a été créé.";
             }
         } else {
-            result = "Le dossier " + parameter + " n'a pas été créé.";
+            result = "Le dossier " + null + " n'a pas été créé.";
         }
 
         return result;
     }
 
-    /*
-     * 
-     */
-    private String handleCommandUpload(String commandName, String parameter) {
+    private String handleCommandUpload(String commandName, String parameter) throws IOException {
         // TODO handles the file from the client to the server
-        if(parameter != null) {
+        String s = "File not found";
+        if(parameter != null){
             File fileToSend = new File(parameter);
-            if(fileToSend != null)
-                FileInputStream fileInput = new FileInputStream(fileToSend[0],getAbsolutePath());
-                // connect to the server
-                Socket socket = new Socket("localhost", 8080);
-                // create a file output stream
-                DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-                // write the name of the file to the DataOutputStream
-                dataOutputStream.writeUTF(fileToSend.getName());
-                // create a buffer of maximum size
-                byte[] buffer = new byte[socket.getSendBufferSize()];
-                int bytesRead;
-                // read from the file and write to the socket
-                while ((bytesRead = FileInputStream.read(buffer)) > 0) {
-                    dataOutputStream.write(buffer, 0, bytesRead);
+            if(fileToSend.exists()){
+                try {
+                    Socket socket = new Socket("localhost", 5000);
+                    DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+                    DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                // close the file
-                FileInputStream.close();
-                // close the socket
-                socket.close();
-                return "File sent successfully";
-            else
-                return "File not found";
-        else
-            return "No file specified";
+
+            } else {
+                return s;
+            }
+        } else {
+            return s;
+        }
     }
 
-    private String handleCommandDownload(String commandName, String parameter) {
+    private String handleCommandDownload(String commandName, String parameter) throws IOException {
         // TODO downloads the file from the server to the client
         if(parameter != null) {
             File fileToReceive = new File(parameter);
             if(fileToReceive != null){
-                // connect to the server
-                Socket socket = new Socket("localhost", 8080);
-                // create a file output stream
-                DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-                // write the name of the file to the DataOutputStream
-                dataOutputStream.writeUTF(fileToReceive.getName());
-                // create a buffer of maximum size
-                byte[] buffer = new byte[socket.getSendBufferSize()];
-                int bytesRead;
-                // read from the file and write to the socket
-                while ((bytesRead = FileInputStream.read(buffer)) > 0) {
-                    dataOutputStream.write(buffer, 0, bytesRead);
+                try {
+                    // Connect to the server's socket
+                    Socket socket = new Socket("localhost", 5000);
+                    // Create an input stream to receive data from the server
+                    DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+                    // Create an output stream to send data to the server
+                    DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+                    // Create a file output stream to write the file to the hard drive
+                    FileOutputStream fileOutputStream = new FileOutputStream(fileToReceive);
+                    // Create a byte array to store the file's or picture's data
+                    byte[] buffer = new byte[1024];
+                    // Create an integer to store the number of bytes read
+                    int bytesRead;
+                    // Read the file's or picture's data into the byte array
+                    while ((bytesRead = dataInputStream.read(buffer)) > 0) {
+                        // Write the file's or picture's data to the hard drive
+                        fileOutputStream.write(buffer, 0, bytesRead);
+                    }
+                    // Close the data input stream
+                    dataInputStream.close();
+                    // Close the data output stream
+                    dataOutputStream.close();
+                    // Close the file output stream
+                    fileOutputStream.close();
+                    // Close the socket
+                    socket.close();
+                } catch (IOException error) {
+                    error.printStackTrace();
+                    if (error instanceof FileNotFoundException) {
+                        return "File not found";
+                    } else {
+                        return "Error receiving file";
+                    }
                 }
-                // close the file
-                FileInputStream.close();
-                // close the socket
-                socket.close();
-                return "File received successfully";
+                return "File received";
             } else {
                 return "File not found";
             }
@@ -193,7 +198,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         }
     }
 
-    
+
     private void handleCommandExit(String commandName, String parameter) {
         if (parameter == null) {
             try {

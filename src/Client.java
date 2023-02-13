@@ -1,7 +1,6 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.File;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -33,7 +32,7 @@ public class Client {
             try {
                 String command = console.nextLine();
                 out.writeUTF(command);
-                
+
                 if(command.equals("exit")) {
                     console.close();
                     break;
