@@ -129,14 +129,68 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         return result;
     }
 
+    /*
+     * 
+     */
     private String handleCommandUpload(String commandName, String parameter) {
-        // TODO
-        return "TODO";
+        // TODO handles the file from the client to the server
+        if(parameter != null) {
+            File fileToSend = new File(parameter);
+            if(fileToSend != null)
+                FileInputStream fileInput = new FileInputStream(fileToSend[0],getAbsolutePath());
+                // connect to the server
+                Socket socket = new Socket("localhost", 8080);
+                // create a file output stream
+                DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+                // write the name of the file to the DataOutputStream
+                dataOutputStream.writeUTF(fileToSend.getName());
+                // create a buffer of maximum size
+                byte[] buffer = new byte[socket.getSendBufferSize()];
+                int bytesRead;
+                // read from the file and write to the socket
+                while ((bytesRead = FileInputStream.read(buffer)) > 0) {
+                    dataOutputStream.write(buffer, 0, bytesRead);
+                }
+                // close the file
+                FileInputStream.close();
+                // close the socket
+                socket.close();
+                return "File sent successfully";
+            else
+                return "File not found";
+        else
+            return "No file specified";
     }
 
     private String handleCommandDownload(String commandName, String parameter) {
-        // TODO
-        return "TODO";
+        // TODO downloads the file from the server to the client
+        if(parameter != null) {
+            File fileToReceive = new File(parameter);
+            if(fileToReceive != null){
+                // connect to the server
+                Socket socket = new Socket("localhost", 8080);
+                // create a file output stream
+                DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+                // write the name of the file to the DataOutputStream
+                dataOutputStream.writeUTF(fileToReceive.getName());
+                // create a buffer of maximum size
+                byte[] buffer = new byte[socket.getSendBufferSize()];
+                int bytesRead;
+                // read from the file and write to the socket
+                while ((bytesRead = FileInputStream.read(buffer)) > 0) {
+                    dataOutputStream.write(buffer, 0, bytesRead);
+                }
+                // close the file
+                FileInputStream.close();
+                // close the socket
+                socket.close();
+                return "File received successfully";
+            } else {
+                return "File not found";
+            }
+        } else {
+            return "No file specified";
+        }
     }
 
     
