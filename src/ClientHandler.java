@@ -2,8 +2,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Date;
 import java.io.File;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 public class ClientHandler extends Thread { // Pour traiter la demande de chaque client sur un socket particulier
     private Socket socket;
@@ -59,7 +60,6 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
 
     private void reducer(String commandName, String parameter) {
         String result;
-        String status = "[" + clientAddress + "." + clientPort + " - " + new Date().toString() + "] : ";
         try {
             switch (commandName) {
                 case "cd":
@@ -69,7 +69,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     result = handleCommandLs();
                     break;
                 case "mkdir":
-                    result = handleCommandMkdir(commandName, parameter);
+                    result = handleCommandMkdir(parameter);
                     break;
                 case "upload":
                     result = handleCommandUpload(commandName, parameter);
@@ -86,7 +86,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     result = "Either you made a mistake writing the command or an error occurred";
             }
             out.writeUTF(result);
-            System.out.println(status + commandName + " " + parameter);
+            printCommandHandled(commandName, parameter);
         } catch (IOException e) {
             System.out.println("Error handling client#" + clientNumber + ": " + e);
         }
@@ -116,7 +116,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         return result;
     }
 
-    private String handleCommandMkdir(String commandName, String parameter) {
+    private String handleCommandMkdir(String parameter) {
         String result = "";
         File directory = new File(System.getProperty("user.dir"));
 
@@ -150,5 +150,17 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
             System.out.println("Couldn't close a socket, what's going on?");
         }
         System.out.println("Connection with client# " + clientNumber + " closed");
+    }
+
+    private void printCommandHandled(String commandName, String parameter) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd@HH:mm:ss");
+        String status = "[" + clientAddress.replaceAll("/", "") + "." +
+            clientPort + " - " + formatter.format(new Date()) + "] : ";
+        if (parameter != null) {
+            System.out.println(status + commandName + " " + parameter);
+        }
+        else {
+            System.out.println(status + commandName);
+        }
     }
 }
