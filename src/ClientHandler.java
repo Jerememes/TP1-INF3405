@@ -2,17 +2,23 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Date;
 import java.io.File;
 
 public class ClientHandler extends Thread { // Pour traiter la demande de chaque client sur un socket particulier
     private Socket socket;
     private DataOutputStream out;
     private DataInputStream in;
+
     private int clientNumber;
+    private int clientPort;
+    private String clientAddress;
 
     public ClientHandler(Socket socket, int clientNumber) {
         this.socket = socket;
         this.clientNumber = clientNumber;
+        this.clientPort = socket.getPort();
+        this.clientAddress = socket.getRemoteSocketAddress().toString();
         System.out.println("New connection with client#" + clientNumber + " at " + socket);
     }
 
@@ -53,37 +59,34 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
 
     private void reducer(String commandName, String parameter) {
         String result;
+        String status = "[" + clientAddress + "." + clientPort + " - " + new Date().toString() + "] : ";
         try {
             switch (commandName) {
                 case "cd":
-                    System.out.println("Handling command cd");
                     result = handleCommandCd(commandName, parameter);
                     break;
                 case "ls":
-                    System.out.println("Handling command ls");
-                    result = handleCommandLs(commandName, parameter);
+                    result = handleCommandLs();
                     break;
                 case "mkdir":
-                    System.out.println("Handling command mkdir");
                     result = handleCommandMkdir(commandName, parameter);
                     break;
                 case "upload":
-                    System.out.println("Handling command upload");
                     result = handleCommandUpload(commandName, parameter);
                     break;
                 case "download":
-                    System.out.println("Handling command download");
                     result = handleCommandDownload(commandName, parameter);
                     break;
                 case "exit":
-                    System.out.println("Handling command exit");
-                    handleCommandExit(commandName, parameter);
+                    if (parameter == null) handleCommandExit();
                     return;
                 default:
-                    System.out.println("Can't handle the request");
+                    commandName = "Error";
+                    parameter = "";
                     result = "Either you made a mistake writing the command or an error occurred";
             }
             out.writeUTF(result);
+            System.out.println(status + commandName + " " + parameter);
         } catch (IOException e) {
             System.out.println("Error handling client#" + clientNumber + ": " + e);
         }
@@ -97,7 +100,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         return "Vous êtes dans le dossier " + System.getProperty("user.dir");
     }
 
-    private String handleCommandLs(String commandName, String parameter) {
+    private String handleCommandLs() {
         String result = "";
         File directory = new File(System.getProperty("user.dir"));
         File[] fileList = directory.listFiles();
@@ -140,14 +143,12 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
     }
 
     
-    private void handleCommandExit(String commandName, String parameter) {
-        if (parameter == null) {
-            try {
-                socket.close();
-            } catch (IOException e) {
-                System.out.println("Couldn't close a socket, what's going on?");
-            }
-            System.out.println("Connection with client# " + clientNumber + " closed");
+    private void handleCommandExit() {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            System.out.println("Couldn't close a socket, what's going on?");
         }
+        System.out.println("Connection with client# " + clientNumber + " closed");
     }
 }
