@@ -39,8 +39,8 @@ public class Client {
     }
 
 	private static void connectToServeur() {
-		System.out.println("Veuillez rentrer l'adresse IP : ");
 		while(true) {
+			System.out.println("Veuillez rentrer l'adresse IP du serveur : ");
 			String ip = console.nextLine();
 			if (isValidIp(ip)) {
 				serverAddress = ip;
@@ -50,8 +50,8 @@ public class Client {
 			}
 		}
 
-        System.out.println("Veuillez rentrer le port de connexion : ");
 		while(true) {
+			System.out.println("Veuillez rentrer le port de connexion du serveur : ");
 			String port = console.nextLine();
 			if (isValidPort(port)) {
 				serverPort = Integer.parseInt(port);

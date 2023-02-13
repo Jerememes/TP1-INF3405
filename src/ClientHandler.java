@@ -14,6 +14,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
     private int clientNumber;
     private int clientPort;
     private String clientAddress;
+    private File currentPath;
 
     public ClientHandler(Socket socket, int clientNumber) {
         this.socket = socket;
@@ -25,6 +26,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
 
     public void run() { // Création de thread qui communique avec un client
         try {
+            currentPath = new File(System.getProperty("user.dir"));
             in = new DataInputStream(socket.getInputStream()); // Création de canal de réception
             out = new DataOutputStream(socket.getOutputStream()); // Création de canal d’envoi
             out.writeUTF("Hello from server - you are client#" + clientNumber);
@@ -63,7 +65,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         try {
             switch (commandName) {
                 case "cd":
-                    result = handleCommandCd(commandName, parameter);
+                    result = handleCommandCd(parameter);
                     break;
                 case "ls":
                     result = handleCommandLs();
@@ -78,11 +80,13 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     result = handleCommandDownload(commandName, parameter);
                     break;
                 case "exit":
-                    if (parameter == null) handleCommandExit();
+                    if (parameter == null) {
+                        handleCommandExit();
+                        printCommandHandled(commandName, parameter);
+                    }
                     return;
                 default:
-                    commandName = "Error";
-                    parameter = "";
+                    commandName = "Error"; parameter = "";
                     result = "Either you made a mistake writing the command or an error occurred";
             }
             out.writeUTF(result);
@@ -92,44 +96,38 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         }
     }
 
-    private String handleCommandCd(String commandName, String parameter) {
-        File newDirectory = new File(parameter).getAbsoluteFile();
-        if (newDirectory.exists() || newDirectory.mkdirs()) {
-            String path = System.setProperty("user.dir", newDirectory.getAbsolutePath());
+    private String handleCommandCd(String parameter) throws IOException {
+        File wantedPath = new File(currentPath, parameter).getCanonicalFile();
+        if (!wantedPath.exists()) {
+            return "Impossible puisque le path n'existe pas";
+        } else if (wantedPath.isFile()) {
+            return "Impossible de se déplacer dans un fichier";
         }
-        return "Vous êtes dans le dossier " + System.getProperty("user.dir");
+        currentPath = wantedPath;
+        return "Vous êtes dans le dossier " + currentPath.getAbsolutePath();
     }
 
     private String handleCommandLs() {
         String result = "";
-        File directory = new File(System.getProperty("user.dir"));
-        File[] fileList = directory.listFiles();
-
+        File[] fileList = currentPath.listFiles();
         for(File file : fileList) {
             if (file.isDirectory()) {
-                result += "[Folder] " + file.getName() + "\n";
+                result += "\n" + "[Folder] " + file.getName();
             } else if (file.isFile()){
-                result += "[File] " + file.getName() + "\n";
+                result +=  "\n" + "[File] " + file.getName();
             }
         }
-
-        return result;
+        return result.replaceFirst("\n", "");
     }
 
     private String handleCommandMkdir(String parameter) {
-        String result = "";
-        File directory = new File(System.getProperty("user.dir"));
-
         if (parameter != null) {
-            File folder = new File(directory, parameter);
+            File folder = new File(currentPath, parameter);
             if (folder.mkdir()) {
-                result = "Le dossier " + parameter + " a été créé.";
+                return "Le dossier " + parameter + " a été créé.";
             }
-        } else {
-            result = "Le dossier " + parameter + " n'a pas été créé.";
         }
-
-        return result;
+        return "Le dossier " + parameter + " n'a pas été créé.";
     }
 
     private String handleCommandUpload(String commandName, String parameter) {
