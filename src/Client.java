@@ -97,16 +97,14 @@ public class Client {
         Scanner console = new Scanner(System.in);
         while (true) {
             try {
-                if (console.hasNextLine()) {
-                    String command = console.nextLine();
-                    out.writeUTF(command);
-                    
-                    if(command.equals("exit")) {
-                        console.close();
-                        break;
-                    }
-                    System.out.println(in.readUTF());
+                String command = console.nextLine();
+                out.writeUTF(command);
+
+                if(command.equals("exit")) {
+                    console.close();
+                    break;
                 }
+				System.out.println(in.readUTF());
             } catch (IOException e) {
                 System.out.println("Error while sending request to server");
                 break;
