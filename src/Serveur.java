@@ -4,12 +4,15 @@ import java.net.ServerSocket;
 import java.util.Scanner;
 
 public class Serveur {
-	private static ServerSocket Listener;
+	static int serverPort;
+	static String serverAddress;
 	private static int clientNumber = 0;
-	static int serverPort = 5000;
-	static String serverAddress = "127.0.0.1";
-	public static void main(String[] args) throws Exception {		
+	private static ServerSocket Listener;
+
+	public static void main(String[] args) throws Exception {
+		System.out.println("Bonjour !");		
 		initServeur();
+
 		Listener = new ServerSocket();
 		Listener.setReuseAddress(true);
 		InetAddress serverIP = InetAddress.getByName(serverAddress);
@@ -30,7 +33,6 @@ public class Serveur {
 
 	private static void initServeur() {
 		Scanner console = new Scanner(System.in);
-		System.out.println("Bonjour !");
 
 		while(true) {
 			System.out.println("Veuillez rentrer l'adresse IP : ");
@@ -47,8 +49,7 @@ public class Serveur {
 			System.out.println("Veuillez rentrer le port de connexion : ");
 			String port = console.nextLine();
 			if (isValidPort(port)) {
-				int p = Integer.parseInt(port);
-				serverPort = p;
+				serverPort = Integer.parseInt(port);
 				break;
 			} else {
 				System.out.println("Le port n'est pas valide.");
