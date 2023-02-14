@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat;
 import java.io.FileInputStream;
 
 public class ClientHandler extends Thread { // Pour traiter la demande de chaque client sur un socket particulier
-    final private Socket socket;
+    private Socket socket;
     private DataOutputStream out;
     private DataInputStream in;
 
@@ -129,66 +129,71 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
 
     private String handleCommandUpload(String parameter) throws IOException {
         // TODO handles the file from the client to the server
-        String s = "File not found";
         if(parameter != null){
-            File fileToSend = new File(parameter);
+            File fileToSend = new File(currentPath + File.separator + parameter);
             if(fileToSend.exists()){
                 try {
-                    Socket socket = new Socket("localhost", 5000);
                     DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-                    DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-
+                    FileOutputStream fileOutputStream = new FileOutputStream(fileToSend);
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = dataInputStream.read(buffer)) > 0) {
+                        fileOutputStream.write(buffer, 0, bytesRead);
+                    }
+                    fileOutputStream.close();
+                    dataInputStream.close();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    return "Error while uploading the file";
                 }
+                return "File uploaded successfully";
+            } else {
+                return "File doesn't exist";
             }
+        } else {
+            return "File path doesn't exist";
         }
-        return s;
     }
 
     private String handleCommandDownload(String parameter) throws IOException {
         // TODO downloads the file from the server to the client
         if(parameter != null) {
-            File fileToReceive = new File(parameter);
-            if(fileToReceive != null) {
+            File fileToReceive = new File(currentPath + File.separator + parameter);
+            int fileToReceiveByteSize = (int) fileToReceive.length();
+            if(fileToReceive != null){
                 try {
-                    // Connect to the server's socket
-                    Socket socket = new Socket("localhost", 5000);
                     // Create an input stream to receive data from the server
-                    DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+                    FileInputStream fileInputStream = new FileInputStream(fileToReceive);
                     // Create an output stream to send data to the server
                     DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-                    // Create a file output stream to write the file to the hard drive
-                    FileOutputStream fileOutputStream = new FileOutputStream(fileToReceive);
                     // Create a byte array to store the file's or picture's data
                     byte[] buffer = new byte[1024];
                     // Create an integer to store the number of bytes read
                     int bytesRead;
                     // Read the file's or picture's data into the byte array
-                    while ((bytesRead = dataInputStream.read(buffer)) > 0) {
+                    while ((bytesRead = fileInputStream.read(buffer)) > 0) {
                         // Write the file's or picture's data to the hard drive
-                        fileOutputStream.write(buffer, 0, bytesRead);
+                        dataOutputStream.write(buffer, 0, bytesRead);
                     }
-                    // Close the data input stream
-                    dataInputStream.close();
                     // Close the data output stream
                     dataOutputStream.close();
                     // Close the file output stream
-                    fileOutputStream.close();
-                    // Close the socket
-                    socket.close();
+                    fileInputStream.close();
                 } catch (IOException error) {
                     error.printStackTrace();
                     if (error instanceof FileNotFoundException) {
-                        return "File not found";
+                        return "File exception";
                     } else {
                         return "Error receiving file";
                     }
                 }
                 return "File received";
+            } else {
+                return "File not found";
             }
+        } else {
+            return "No file specified";
         }
-        return "No file specified";
     }
 
     private void handleCommandExit() {
