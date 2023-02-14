@@ -128,44 +128,32 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
     }
 
     private String handleCommandUpload(String parameter) throws IOException {
-        // TODO handles the file from the client to the server
-        if(parameter != null){
-            File fileToSend = new File(currentPath + File.separator + parameter);
-            if(fileToSend.exists()){
-                try {
-                    FileOutputStream fileOutputStream = new FileOutputStream(fileToSend);
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = in.read(buffer, 0,)) > 0) {
-                        fileOutputStream.write(buffer, 0, bytesRead);
-                    }
-                    fileOutputStream.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "Error while uploading the file";
-                }
-                return "File uploaded successfully";
-            } else {
-                return "File doesn't exist";
-            }
-        } else {
-            return "File path doesn't exist";
+        int bytes = 0;
+        FileOutputStream fileOutputStream = new FileOutputStream(parameter);
+        
+        long size = in.readLong();
+        byte[] buffer = new byte[1024];
+        while (size > 0 && (bytes = in.read(buffer)) != -1) {
+            fileOutputStream.write(buffer, 0, bytes);
+            size -= bytes;
         }
+        fileOutputStream.close();
+        return "L'upload du fichier " + parameter + " a réussi";
     }
 
     private String handleCommandDownload(String parameter) throws IOException {
-        File fileToReceive = new File(currentPath + File.separator + parameter);
         int bytes = 0;
-        File file = new File(path);
+        File file = new File(currentPath, parameter);
         FileInputStream fileInputStream = new FileInputStream(file);
 
         out.writeLong(file.length());
-        byte[] buffer = new byte[4*1024];
+        byte[] buffer = new byte[1024];
         while ((bytes=fileInputStream.read(buffer))!=-1){
             out.write(buffer, 0, bytes);
             out.flush();
         }
         fileInputStream.close();
+        return "Le fichier " + file.getName() + " a été téléchargé.";
     }
 
     private void handleCommandExit() {

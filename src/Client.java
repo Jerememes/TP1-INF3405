@@ -1,5 +1,8 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
@@ -104,7 +107,30 @@ public class Client {
                     console.close();
                     break;
                 } else if (command.startsWith("download")) {
-					// TODO
+					int bytes = 0;
+					String fileName = command.split(" ")[command.split(" ").length - 1];
+					FileOutputStream fileOutputStream = new FileOutputStream(fileName);
+					
+					long size = in.readLong();
+					byte[] buffer = new byte[1024];
+					while (size > 0 && (bytes = in.read(buffer)) != -1) {
+						fileOutputStream.write(buffer, 0, bytes);
+						size -= bytes;
+					}
+					fileOutputStream.close();
+				} else if (command.startsWith("upload")) {
+					int bytes = 0;
+					String fileName = command.split(" ")[command.split(" ").length - 1];
+					File file = new File(System.getProperty("user-dir"), fileName);
+					FileInputStream fileInputStream = new FileInputStream(file);
+			
+					out.writeLong(file.length());
+					byte[] buffer = new byte[1024];
+					while ((bytes=fileInputStream.read(buffer)) != -1){
+						out.write(buffer, 0, bytes);
+						out.flush();
+					}
+					fileInputStream.close();
 				} else {
 					System.out.println(in.readUTF());
 				}
