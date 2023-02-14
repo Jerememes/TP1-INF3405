@@ -129,7 +129,8 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
 
     private String handleCommandUpload(String parameter) throws IOException {
         int bytes = 0;
-        FileOutputStream fileOutputStream = new FileOutputStream(parameter);
+        File uploadFile = new File(currentPath, parameter);
+        FileOutputStream fileOutputStream = new FileOutputStream(uploadFile.getAbsolutePath());
         
         long size = in.readLong();
         byte[] buffer = new byte[1024];

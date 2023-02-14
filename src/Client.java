@@ -121,12 +121,12 @@ public class Client {
 				} else if (command.startsWith("upload")) {
 					int bytes = 0;
 					String fileName = command.split(" ")[command.split(" ").length - 1];
-					File file = new File(System.getProperty("user-dir"), fileName);
+					File file = new File(System.getProperty("user.dir"), fileName);
 					FileInputStream fileInputStream = new FileInputStream(file);
 			
 					out.writeLong(file.length());
 					byte[] buffer = new byte[1024];
-					while ((bytes=fileInputStream.read(buffer)) != -1){
+					while ((bytes = fileInputStream.read(buffer)) != -1){
 						out.write(buffer, 0, bytes);
 						out.flush();
 					}
