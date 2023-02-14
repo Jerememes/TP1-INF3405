@@ -133,15 +133,13 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
             File fileToSend = new File(currentPath + File.separator + parameter);
             if(fileToSend.exists()){
                 try {
-                    DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
                     FileOutputStream fileOutputStream = new FileOutputStream(fileToSend);
                     byte[] buffer = new byte[1024];
                     int bytesRead;
-                    while ((bytesRead = dataInputStream.read(buffer)) > 0) {
+                    while ((bytesRead = in.read(buffer)) > 0) {
                         fileOutputStream.write(buffer, 0, bytesRead);
                     }
                     fileOutputStream.close();
-                    dataInputStream.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                     return "Error while uploading the file";
@@ -159,13 +157,10 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         // TODO downloads the file from the server to the client
         if(parameter != null) {
             File fileToReceive = new File(currentPath + File.separator + parameter);
-            int fileToReceiveByteSize = (int) fileToReceive.length();
             if(fileToReceive != null){
                 try {
                     // Create an input stream to receive data from the server
                     FileInputStream fileInputStream = new FileInputStream(fileToReceive);
-                    // Create an output stream to send data to the server
-                    DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
                     // Create a byte array to store the file's or picture's data
                     byte[] buffer = new byte[1024];
                     // Create an integer to store the number of bytes read
@@ -173,10 +168,8 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     // Read the file's or picture's data into the byte array
                     while ((bytesRead = fileInputStream.read(buffer)) > 0) {
                         // Write the file's or picture's data to the hard drive
-                        dataOutputStream.write(buffer, 0, bytesRead);
+                        out.write(buffer, 0, bytesRead);
                     }
-                    // Close the data output stream
-                    dataOutputStream.close();
                     // Close the file output stream
                     fileInputStream.close();
                 } catch (IOException error) {

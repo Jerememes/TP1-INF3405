@@ -24,7 +24,7 @@ public class Client {
                 out = new DataOutputStream(socket.getOutputStream());
                 in = new DataInputStream(socket.getInputStream());
                 String helloMessageFromServer = in.readUTF();
-                System.out.format("Connecté au erveur lancé sur [%s:%d] ", serverAddress, serverPort);
+                System.out.format("Connecté au serveur lancé sur [%s:%d] ", serverAddress, serverPort);
                 System.out.println(helloMessageFromServer);
                 break;
             } catch (Exception e) {
