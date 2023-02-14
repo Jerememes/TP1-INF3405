@@ -5,12 +5,17 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
+    static int serverPort;
+	static String serverAddress;
+    private static Scanner console;
+    
     private static Socket socket;
     private static DataInputStream in;
     private static DataOutputStream out;
     private static int serverPort;
     private static String serverAddress;
     public static void main(String[] args) throws Exception {
+<<<<<<< HEAD
     	initClient();
         
         socket = new Socket(serverAddress, serverPort);
@@ -21,12 +26,33 @@ public class Client {
 
         System.out.format("Serveur lancé sur [%s:%d] ", serverAddress, serverPort);
         System.out.println(helloMessageFromServer);
+=======
+        console = new Scanner(System.in);
+        System.out.println("Bonjour !");
+
+        while(true) {
+            try {
+                connectToServeur();
+                socket = new Socket(serverAddress, serverPort);
+                out = new DataOutputStream(socket.getOutputStream());
+                in = new DataInputStream(socket.getInputStream());
+                String helloMessageFromServer = in.readUTF();
+                System.out.format("Connecté au serveur lancé sur [%s:%d] ", serverAddress, serverPort);
+                System.out.println(helloMessageFromServer);
+                break;
+            } catch (Exception e) {
+                System.out.format("La communication n'a pas pu être établie sur [%s:%d]. ", serverAddress, serverPort);
+                continue;
+            }
+        }
+>>>>>>> 9b424c098ea7be174372758ae4cbedd4a2bc0761
 
         communication();
-
         socket.close();
+        console.close();
     }
 
+<<<<<<< HEAD
     private static void initClient() {
     	System.out.println("Bonjour !");
     	Scanner console = new Scanner(System.in);
@@ -93,6 +119,64 @@ public class Client {
 	
 
 	public static void communication() {
+=======
+	private static void connectToServeur() {
+		while(true) {
+			System.out.println("Veuillez rentrer l'adresse IP du serveur : ");
+			String ip = console.nextLine();
+			if (isValidIp(ip)) {
+				serverAddress = ip;
+				break;
+			} else {
+				System.out.println("L'adresse n'est pas valide.");
+			}
+		}
+
+		while(true) {
+			System.out.println("Veuillez rentrer le port de connexion du serveur : ");
+			String port = console.nextLine();
+			if (isValidPort(port)) {
+				serverPort = Integer.parseInt(port);
+				break;
+			} else {
+				System.out.println("Le port n'est pas valide.");
+			}
+		}
+	}
+
+	private static boolean isValidPort(String port) {
+		try {
+			int number = Integer.parseInt(port);
+			if (number >= 5000 && number <= 5050) {
+				return true;
+			}
+		} catch(NumberFormatException e) {
+			return false;
+		}
+		return false;
+	}
+
+	private static boolean isValidIp(String ip) {
+		boolean result = false;
+		String[] ipNumbers = ip.split("\\.");
+		if (ipNumbers.length == 4) {
+			for(String nb : ipNumbers) {
+				try {
+					int number = Integer.parseInt(nb);
+					if (number > 255 || number < 0) {
+						return false;
+					}
+					result = true;
+				} catch(NumberFormatException e) {
+					return false;
+				}
+			}
+		}
+		return result;
+	}
+
+    public static void communication() {
+>>>>>>> 9b424c098ea7be174372758ae4cbedd4a2bc0761
         Scanner console = new Scanner(System.in);
         while (true) {
             try {
@@ -103,8 +187,7 @@ public class Client {
                     console.close();
                     break;
                 }
-                System.out.println(in.readUTF());
-
+				System.out.println(in.readUTF());
             } catch (IOException e) {
                 System.out.println("Error while sending request to server");
                 break;

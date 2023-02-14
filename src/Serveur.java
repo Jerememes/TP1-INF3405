@@ -8,6 +8,7 @@ public class Serveur {
     private static int clientNumber = 0;
     static int serverPort = 5000;
     static String serverAddress = "127.0.0.1";
+    
     public static void main(String[] args) throws Exception {
         initServeur();
         Listener = new ServerSocket();

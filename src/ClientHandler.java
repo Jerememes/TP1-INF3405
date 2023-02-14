@@ -1,22 +1,32 @@
 import java.io.*;
 import java.net.Socket;
+import java.io.File;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.io.FileInputStream;
 import java.util.Arrays;
 
 public class ClientHandler extends Thread { // Pour traiter la demande de chaque client sur un socket particulier
-    final private Socket socket;
+    private Socket socket;
     private DataOutputStream out;
     private DataInputStream in;
+
+    private int clientPort;
+    private String clientAddress;
+    private File currentPath;
     private final int clientNumber;
 
     public ClientHandler(Socket socket, int clientNumber) {
         this.socket = socket;
         this.clientNumber = clientNumber;
+        this.clientPort = socket.getPort();
+        this.clientAddress = socket.getRemoteSocketAddress().toString();
         System.out.println("New connection with client#" + clientNumber + " at " + socket);
     }
 
     public void run() { // Création de thread qui communique avec un client
         try {
+            currentPath = new File(System.getProperty("user.dir"));
             in = new DataInputStream(socket.getInputStream()); // Création de canal de réception
             out = new DataOutputStream(socket.getOutputStream()); // Création de canal d’envoi
             out.writeUTF("Hello from server - you are client#" + clientNumber);
@@ -52,141 +62,121 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         String result;
         try {
             switch (commandName) {
-                case "cd" -> {
-                    System.out.println("Handling command cd");
-                    result = handleCommandCd(commandName, parameter);
-                }
-                case "ls" -> {
-                    System.out.println("Handling command ls");
-                    result = handleCommandLs(commandName, parameter);
-                }
-                case "mkdir" -> {
-                    System.out.println("Handling command mkdir");
-                    result = handleCommandMkdir(commandName, parameter);
-                }
-                case "upload" -> {
-                    System.out.println("Handling command upload");
-                    result = handleCommandUpload(commandName, parameter);
-                }
-                case "download" -> {
-                    System.out.println("Handling command download");
-                    result = handleCommandDownload(commandName, parameter);
-                }
-                case "exit" -> {
-                    System.out.println("Handling command exit");
-                    handleCommandExit(commandName, parameter);
-                    return;
-                }
-                default -> {
-                    System.out.println("Can't handle the request");
-                    result = "Either you made a mistake writing the command or an error occurred.";
-                }
+                case "cd":
+                    result = handleCommandCd(parameter);
+                    break;
+                case "ls":
+                    result = handleCommandLs();
+                    break;
+                case "mkdir":
+                    result = handleCommandMkdir(parameter);
+                    break;
+                case "upload":
+                    result = handleCommandUpload(parameter);
+                    break;
+                case "download":
+                    result = handleCommandDownload(parameter);
+                    break;
+                case "exit":
+                    if (parameter == null) {
+                        handleCommandExit();
+                        printCommandHandled(commandName, parameter);
+                        return;
+                    }
+                default:
+                    commandName = "Error"; parameter = "";
+                    result = "Either you made a mistake writing the command or an error occurred";
             }
             out.writeUTF(result);
+            printCommandHandled(commandName, parameter);
         } catch (IOException e) {
             System.out.println("Error handling client#" + clientNumber + ": " + e);
         }
     }
 
-    private String handleCommandCd(String commandName, String parameter) {
-        File newDirectory = new File(parameter).getAbsoluteFile();
-        if (newDirectory.exists() || newDirectory.mkdirs()) {
-            String path = System.setProperty("user.dir", newDirectory.getAbsolutePath());
+    private String handleCommandCd(String parameter) throws IOException {
+        File wantedPath = new File(currentPath, parameter).getCanonicalFile();
+        if (!wantedPath.exists()) {
+            return "Impossible puisque le path n'existe pas";
+        } else if (wantedPath.isFile()) {
+            return "Impossible de se déplacer dans un fichier";
         }
-        return "Vous êtes dans le dossier " + System.getProperty("user.dir");
+        currentPath = wantedPath;
+        return "Vous êtes dans le dossier " + currentPath.getAbsolutePath();
     }
 
-    private String handleCommandLs(String commandName, String parameter) {
+    private String handleCommandLs() {
         String result = "";
-        File directory = new File(System.getProperty("user.dir"));
-        File[] fileList = directory.listFiles();
-        //result = String.join(", ", Arrays.stream(fileList).map(File::toString).toArray(String[]::new));
+        File[] fileList = currentPath.listFiles();
         for(File file : fileList) {
             if (file.isDirectory()) {
-                result += "[Folder] " + file.getName() + "\n";
+                result += "\n" + "[Folder] " + file.getName();
             } else if (file.isFile()){
-                result += "[File] " + file.getName() + "\n";
+                result +=  "\n" + "[File] " + file.getName();
             }
         }
-
-        return result;
+        return result.replaceFirst("\n", "");
     }
 
-    private String handleCommandMkdir(String commandName, String parameter) {
-        String result = "";
-        File directory = new File(System.getProperty("user.dir"));
-
+    private String handleCommandMkdir(String parameter) {
         if (parameter != null) {
-            File folder = new File(directory, parameter);
+            File folder = new File(currentPath, parameter);
             if (folder.mkdir()) {
-                result = "Le dossier " + parameter + " a été créé.";
+                return "Le dossier " + parameter + " a été créé.";
             }
-        } else {
-            result = "Le dossier " + null + " n'a pas été créé.";
         }
-
-        return result;
+        return "Le dossier " + parameter + " n'a pas été créé.";
     }
 
-    private String handleCommandUpload(String commandName, String parameter) throws IOException {
+    private String handleCommandUpload(String parameter) throws IOException {
         // TODO handles the file from the client to the server
-        String s = "File not found";
         if(parameter != null){
-            File fileToSend = new File(parameter);
+            File fileToSend = new File(currentPath + File.separator + parameter);
             if(fileToSend.exists()){
                 try {
-                    Socket socket = new Socket("localhost", 5000);
-                    DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-                    DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-                    return s;
+                    FileOutputStream fileOutputStream = new FileOutputStream(fileToSend);
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = in.read(buffer)) > 0) {
+                        fileOutputStream.write(buffer, 0, bytesRead);
+                    }
+                    fileOutputStream.close();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    return "Error while uploading the file";
                 }
-
+                return "File uploaded successfully";
             } else {
-                return s;
+                return "File doesn't exist";
             }
         } else {
-            return s;
+            return "File path doesn't exist";
         }
-		return s;
     }
 
-    private String handleCommandDownload(String commandName, String parameter) throws IOException {
+    private String handleCommandDownload(String parameter) throws IOException {
         // TODO downloads the file from the server to the client
         if(parameter != null) {
-            File fileToReceive = new File(parameter);
+            File fileToReceive = new File(currentPath + File.separator + parameter);
             if(fileToReceive != null){
                 try {
-                    // Connect to the server's socket
-                    Socket socket = new Socket("localhost", 5000);
                     // Create an input stream to receive data from the server
-                    DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-                    // Create an output stream to send data to the server
-                    DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-                    // Create a file output stream to write the file to the hard drive
-                    FileOutputStream fileOutputStream = new FileOutputStream(fileToReceive);
+                    FileInputStream fileInputStream = new FileInputStream(fileToReceive);
                     // Create a byte array to store the file's or picture's data
                     byte[] buffer = new byte[1024];
                     // Create an integer to store the number of bytes read
                     int bytesRead;
                     // Read the file's or picture's data into the byte array
-                    while ((bytesRead = dataInputStream.read(buffer)) > 0) {
+                    while ((bytesRead = fileInputStream.read(buffer)) > 0) {
                         // Write the file's or picture's data to the hard drive
-                        fileOutputStream.write(buffer, 0, bytesRead);
+                        out.write(buffer, 0, bytesRead);
                     }
-                    // Close the data input stream
-                    dataInputStream.close();
-                    // Close the data output stream
-                    dataOutputStream.close();
                     // Close the file output stream
-                    fileOutputStream.close();
-                    // Close the socket
-                    socket.close();
+                    fileInputStream.close();
                 } catch (IOException error) {
                     error.printStackTrace();
                     if (error instanceof FileNotFoundException) {
-                        return "File not found";
+                        return "File exception";
                     } else {
                         return "Error receiving file";
                     }
@@ -200,15 +190,24 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
         }
     }
 
+    private void handleCommandExit() {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            System.out.println("Couldn't close a socket, what's going on?");
+        }
+        System.out.println("Connection with client# " + clientNumber + " closed");
+    }
 
-    private void handleCommandExit(String commandName, String parameter) {
-        if (parameter == null) {
-            try {
-                socket.close();
-            } catch (IOException e) {
-                System.out.println("Couldn't close a socket, what's going on?");
-            }
-            System.out.println("Connection with client# " + clientNumber + " closed");
+    private void printCommandHandled(String commandName, String parameter) {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd@HH:mm:ss");
+        String status = "[" + clientAddress.replaceAll("/", "") + "." +
+            clientPort + " - " + formatter.format(new Date()) + "] : ";
+        if (parameter != null) {
+            System.out.println(status + commandName + " " + parameter);
+        }
+        else {
+            System.out.println(status + commandName);
         }
     }
 }
