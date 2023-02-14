@@ -103,8 +103,11 @@ public class Client {
                 if(command.equals("exit")) {
                     console.close();
                     break;
-                }
-				System.out.println(in.readUTF());
+                } else if (command.startsWith("download")) {
+					// TODO
+				} else {
+					System.out.println(in.readUTF());
+				}
             } catch (IOException e) {
                 System.out.println("Error while sending request to server");
                 break;

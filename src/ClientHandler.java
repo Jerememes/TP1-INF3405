@@ -136,7 +136,7 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
                     FileOutputStream fileOutputStream = new FileOutputStream(fileToSend);
                     byte[] buffer = new byte[1024];
                     int bytesRead;
-                    while ((bytesRead = in.read(buffer)) > 0) {
+                    while ((bytesRead = in.read(buffer, 0,)) > 0) {
                         fileOutputStream.write(buffer, 0, bytesRead);
                     }
                     fileOutputStream.close();
@@ -154,39 +154,18 @@ public class ClientHandler extends Thread { // Pour traiter la demande de chaque
     }
 
     private String handleCommandDownload(String parameter) throws IOException {
-        // TODO downloads the file from the server to the client
-        if(parameter != null) {
-            File fileToReceive = new File(currentPath + File.separator + parameter);
-            if(fileToReceive != null){
-                try {
-                    // Create an input stream to receive data from the server
-                    FileInputStream fileInputStream = new FileInputStream(fileToReceive);
-                    // Create a byte array to store the file's or picture's data
-                    byte[] buffer = new byte[1024];
-                    // Create an integer to store the number of bytes read
-                    int bytesRead;
-                    // Read the file's or picture's data into the byte array
-                    while ((bytesRead = fileInputStream.read(buffer)) > 0) {
-                        // Write the file's or picture's data to the hard drive
-                        out.write(buffer, 0, bytesRead);
-                    }
-                    // Close the file output stream
-                    fileInputStream.close();
-                } catch (IOException error) {
-                    error.printStackTrace();
-                    if (error instanceof FileNotFoundException) {
-                        return "File exception";
-                    } else {
-                        return "Error receiving file";
-                    }
-                }
-                return "File received";
-            } else {
-                return "File not found";
-            }
-        } else {
-            return "No file specified";
+        File fileToReceive = new File(currentPath + File.separator + parameter);
+        int bytes = 0;
+        File file = new File(path);
+        FileInputStream fileInputStream = new FileInputStream(file);
+
+        out.writeLong(file.length());
+        byte[] buffer = new byte[4*1024];
+        while ((bytes=fileInputStream.read(buffer))!=-1){
+            out.write(buffer, 0, bytes);
+            out.flush();
         }
+        fileInputStream.close();
     }
 
     private void handleCommandExit() {
